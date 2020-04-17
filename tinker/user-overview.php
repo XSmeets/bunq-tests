@@ -43,7 +43,7 @@ SharedLib::printAllRequest($requests);
 /**
  * Get cards of the current user.
  */
-const NUMBER_OF_CARDS_SHOWN = 1;
+const NUMBER_OF_CARDS_SHOWN = 10;
 $cards = $bunq->getAllCard(NUMBER_OF_CARDS_SHOWN);
 SharedLib::printAllCard($cards, $monetaryAccounts, NUMBER_OF_CARDS_SHOWN);
 
