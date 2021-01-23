@@ -2,3 +2,4 @@
 vendor
 *.conf
 _user_scripts
+.DS_Store

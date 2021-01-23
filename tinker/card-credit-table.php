@@ -1,6 +1,3 @@
-<?php
-const ENABLE_SHOW_NAME = TRUE;
-?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -18,11 +15,6 @@ const ENABLE_SHOW_NAME = TRUE;
       <th>
         Card description
       </th>
-<?php
-      if (ENABLE_SHOW_NAME) {
-        echo "<th>Name on card</th>";
-      }
-?>
       <th>
         Card country
       </th>
@@ -41,7 +33,8 @@ const ENABLE_SHOW_NAME = TRUE;
     </tr>
 <?php
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/CardC.php';
+function load() {include_once __DIR__ . '/CardC.php';}
+spl_autoload_register('load');
 
 use bunq\tinker\BunqLib;
 use bunq\tinker\SharedLib;
@@ -50,41 +43,30 @@ $allOption = array("production" => "");
 $environment = SharedLib::determineEnvironmentType($allOption);
 $bunq = new BunqLib($environment);
 use bunq\Model\Generated\Endpoint\User;
-use bunq\Model\Generated\Endpoint\Card;
+use bunq\Model\Generated\Endpoint\CardC;
 use bunq\Model\Generated\Endpoint\CardGeneratedCvc2;
 use bunq\Model\Generated\Endpoint\BunqResponseInt;
 use bunq\Model\Generated\Endpoint\BunqResponseCardGeneratedCvc2;
-use bunq\Model\Generated\Endpoint\CardC;
 const CURRENCY_EUR = "EUR";
 const POINTER_TYPE_IBAN = "IBAN";
 const MESSAGE_MONETARY_ACCOUNT_NAME = 'Display name of monetary account: "%s"';
 const INDEX_FIRST = 0;
+const ENABLE_METAL = false;
 $echoValue = 1;
 
 //$userArray = User::listing()->getValue();
 //$user = $userArray[0]->getUserPerson();
 
-$cardList = Card::listing(array("count" => "200"));
+$cardList = CardC::listing(array("count" => "200"));
 if(false) {
 echo "<pre>";
 print_r($cardList);
 echo '</pre>';
 }
-
-
-function cardTableEntry($card) {
+foreach ($cardList->getValue() as $card) {
   $cardStatus = $card->getStatus();
   //print_r($card);
-/*
-  if ($cardStatus == "DEACTIVATED") {
-    Card::update(
-        $card->getId(), // card ID
-        null, // pinCode
-        null, // activationCode
-        'ACTIVE', // status
-    );
-  }
-*/
+
   if (($cardStatus == "ACTIVE") || ($cardStatus == "DEACTIVATED") || ($cardStatus == "PIN TRIES EXCEEDED") || ($cardStatus == "FROZEN")) {
     $cardId = $card->getId();
     $cardType = $card->getType();
@@ -93,7 +75,15 @@ function cardTableEntry($card) {
     $cardLimits = $card->getCardLimit();
     $cardCountry = $card->getCountry();
     $cardPAN = $card->getPrimaryAccountNumbers()[0]->getFourDigit();
-    if ($cardStatus == "ACTIVE" || $cardStatus == "DEACTIVATED") {
+    if ($cardStatus == "DEACTIVATED" && $cardDescription == "MasterCard Metal" && ENABLE_METAL) {
+        CardC::update(
+            $cardId, /* card ID */
+            null, /* pinCode */
+            null, /* activationCode */
+            'ACTIVE', /* status */
+        );    
+    }
+    if ($cardStatus == "ACTIVE") {
       $cvcList = CardGeneratedCvc2::listing($cardId)->getValue();
       $cvcExists = false;
       foreach ($cvcList as $listedCvc) {
@@ -117,9 +107,6 @@ function cardTableEntry($card) {
     echo "<tr><td>" . $cardId . "</td><td>";
     echo $cardType . "</td><td>";
     echo $cardDescription . "</td><td>";
-    if (ENABLE_SHOW_NAME) {
-      echo $card->getNameOnCard() . "</td><td>";
-    }
     echo $cardCountry . "</td><td>";
     echo $cardStatus . "</td><td>";
     echo $cardPAN . "</td><td>";
@@ -132,18 +119,6 @@ function cardTableEntry($card) {
     echo "</td></tr>";
   }
 }
-
-foreach ($cardList->getValue() as $card) {
-  cardTableEntry($card);
-}
-
-//$cardList = Card::listing(array("count" => "200"));
-
-
-foreach (CardC::listing()->getValue() as $card) {
-  cardTableEntry($card);
-}
-
 // Save the API context to account for all the changes that might have occurred to it during the example execution
 $bunq->updateContext();
 ?>
