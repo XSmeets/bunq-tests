@@ -21,7 +21,7 @@ $user = $userArray[0]->getUserPerson();
 //echo $user->getDisplayName();
 
 //$card = CardDebit::create("",$user->getDisplayName(),"MAESTRO_MOBILE_NFC");
-$card = CardDebit::create("",$user->getDisplayName(),"MASTERCARD","MASTERCARD_MOBILE_NFC");
+$card = CardDebit::create("",$user->getDisplayName(),"MASTERCARD_MOBILE_NFC","MASTERCARD_DEBIT");
 
 // Save the API context to account for all the changes that might have occurred to it during the example execution
 $bunq->updateContext();
